@@ -44,6 +44,9 @@ MonoBehaviour:
   - RespawnPlayer
   - RotatePlayerX
   - RotatePlayerY
+  - SetNickname
+  - UpdateScoreboard
+  - UpdateScoreboardKillsP1
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -1,7 +1,9 @@
 using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -18,8 +20,10 @@ public class PlayerMovement : MonoBehaviour
     private int playerHitCounter;
     public GunType gunType;
     private int kills;
-    private GameObject scoreboard, crosshair;
+    private GameObject scoreboard, crosshair, killsP1, killsP2;
+    public GameObject hitmarker, nicknameBox;
     private Camera camFirstPerson, camThirdPerson;
+    public Transform otherPlayer;
     public enum GunType {
         RIFLE,
         SNIPER
@@ -40,6 +44,8 @@ public class PlayerMovement : MonoBehaviour
         canShoot = true;
         scoreboard.SetActive(false);
         line = shootPoint.GetComponent<LineRenderer>();
+        killsP1 = scoreboard.transform.GetChild(2).gameObject;
+        killsP2 = scoreboard.transform.GetChild(4).gameObject;
 
         if (!GetComponent<PhotonView>().IsMine)
         {
@@ -51,27 +57,27 @@ public class PlayerMovement : MonoBehaviour
     {
         if (GetComponent<PhotonView>().IsMine)
         {
-            Vector3 speed = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+            Vector3 speed = new Vector3(UnityEngine.Input.GetAxis("Horizontal"), 0, UnityEngine.Input.GetAxis("Vertical"));
             speed = speed.normalized;
 
             rig.velocity = transform.forward * speed.z * velocity
                 + transform.right * speed.x * velocity
                 + transform.up * rig.velocity.y;
-            transform.GetComponent<PhotonView>().RPC("RotatePlayerX", RpcTarget.All, Input.GetAxis("Mouse X"));
-            transform.GetComponent<PhotonView>().RPC("RotatePlayerY", RpcTarget.All, Input.GetAxis("Mouse Y"));
+            transform.GetComponent<PhotonView>().RPC("RotatePlayerX", RpcTarget.All, UnityEngine.Input.GetAxis("Mouse X"));
+            RotateCameraY(UnityEngine.Input.GetAxis("Mouse Y"));
 
             anim.SetFloat("Velocity", rig.velocity.magnitude);
 
-            if (canShoot && Input.GetButton("Fire1"))
+            if (canShoot && UnityEngine.Input.GetButton("Fire1"))
             {
                 StartCoroutine("Fire");
             }
 
-            if(Input.GetKeyDown(KeyCode.F)){
+            if(UnityEngine.Input.GetKeyDown(KeyCode.F)){
                 SwitchCamera();
             }
 
-            if(Input.GetKey(KeyCode.Tab)){
+            if(UnityEngine.Input.GetKey(KeyCode.Tab)){
                 ShowScoreboard();
             } else {
                 HideScoreboard();
@@ -82,11 +88,11 @@ public class PlayerMovement : MonoBehaviour
     private void RotatePlayerX(float input)
     {
         transform.Rotate(transform.up * input);
+        RotateNickname(input);
     }
-    [PunRPC]
-    private void RotatePlayerY(float input)
+    private void RotateCameraY(float input)
     {
-        transform.Rotate(transform.right * input);
+        camFirstPerson.transform.Rotate(new Vector3(-1,0,0) * input);
     }
     IEnumerator Fire()
     {
@@ -103,6 +109,8 @@ public class PlayerMovement : MonoBehaviour
                 int damage = GetDamage(gunType);
                 hit.transform.GetComponent<PhotonView>().RPC("TakeDamage",RpcTarget.All,damage);
                 playerHitCounter++;
+                hitmarker.SetActive(true);
+                Invoke("HideHitmarker",0.3f);
                 if (playerHitCounter==maxHealth/GetDamage(gunType))
                 {
                     kills++;
@@ -120,6 +128,10 @@ public class PlayerMovement : MonoBehaviour
         anim.ResetTrigger("Fire");
         yield return new WaitForSeconds(GetFirerate(gunType));
         canShoot = true;
+    }
+    public void HideHitmarker()
+    {
+        hitmarker.SetActive(false);
     }
     [PunRPC]
     public void TakeDamage(int damage)
@@ -181,5 +193,23 @@ public class PlayerMovement : MonoBehaviour
     private void HideScoreboard(){
         scoreboard.SetActive(false);
         crosshair.SetActive(true);
+    }
+    [PunRPC]
+    public void SetNickname(string nickname)
+    {
+        nicknameBox.GetComponent<TMP_Text>().text = nickname;
+    }
+    private void RotateNickname(float input)
+    {
+        transform.Rotate(transform.up * input);
+    }
+    [PunRPC]
+    public void UpdateScoreboardKillsP1(int kills)
+    {
+        killsP1.GetComponent<TMP_Text>().text = kills.ToString();
+    }
+    public void UpdateScoreboardKillsP2(int kills)
+    {
+        killsP2.GetComponent<TMP_Text>().text = kills.ToString();
     }
 }

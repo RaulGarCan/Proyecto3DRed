@@ -23,10 +23,10 @@ public class Connection : MonoBehaviourPunCallbacks
 
     private void Update()
     {
+        SaveNickname();
         if (!isLoading && PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.PlayerCount>1)
         {
             isLoading = true;
-            SaveNickname();
             PhotonNetwork.LoadLevel(1);
         }
     }
