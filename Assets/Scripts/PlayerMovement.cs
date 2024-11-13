@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Windows;
 
 public class PlayerMovement : MonoBehaviour
@@ -20,10 +21,9 @@ public class PlayerMovement : MonoBehaviour
     private int playerHitCounter;
     public GunType gunType;
     private int kills;
-    private GameObject scoreboard, crosshair, killsP1, killsP2;
-    public GameObject hitmarker, nicknameBox;
+    private GameObject scoreboard, crosshair, killsP1Score, killsP2Score, nicknameP1Score, nicknameP2Score;
+    public GameObject hitmarker, nicknameBox, otherPlayer;
     private Camera camFirstPerson, camThirdPerson;
-    public Transform otherPlayer;
     public enum GunType {
         RIFLE,
         SNIPER
@@ -44,13 +44,18 @@ public class PlayerMovement : MonoBehaviour
         canShoot = true;
         scoreboard.SetActive(false);
         line = shootPoint.GetComponent<LineRenderer>();
-        killsP1 = scoreboard.transform.GetChild(2).gameObject;
-        killsP2 = scoreboard.transform.GetChild(4).gameObject;
+        killsP1Score = scoreboard.transform.GetChild(2).gameObject;
+        killsP2Score = scoreboard.transform.GetChild(4).gameObject;
+        nicknameP1Score = scoreboard.transform.GetChild(1).gameObject;
+        nicknameP2Score = scoreboard.transform.GetChild(3).gameObject;
 
         if (!GetComponent<PhotonView>().IsMine)
         {
-            Destroy(transform.GetChild(2).gameObject);
+            Destroy(transform.GetChild(2).GetComponent<Camera>());
+            Destroy(transform.GetChild(3).GetComponent<Camera>());
         }
+
+        SetNicknamesScoreboard();
     }
 
     private void Update()
@@ -114,6 +119,13 @@ public class PlayerMovement : MonoBehaviour
                 if (playerHitCounter==maxHealth/GetDamage(gunType))
                 {
                     kills++;
+                    if(PhotonNetwork.IsMasterClient){
+                        hit.transform.GetComponent<PhotonView>().RPC("UpdateScoreboardKillsP1",RpcTarget.All, kills);
+                        UpdateScoreboardKillsP1(kills);
+                    } else {
+                        hit.transform.GetComponent<PhotonView>().RPC("UpdateScoreboardKillsP2",RpcTarget.All, kills);
+                        UpdateScoreboardKillsP2(kills);
+                    }
                     playerHitCounter = 0;
                     RespawnPlayer();
                 }
@@ -206,10 +218,16 @@ public class PlayerMovement : MonoBehaviour
     [PunRPC]
     public void UpdateScoreboardKillsP1(int kills)
     {
-        killsP1.GetComponent<TMP_Text>().text = kills.ToString();
+        killsP1Score.GetComponent<TMP_Text>().text = kills.ToString();
     }
+    [PunRPC]
     public void UpdateScoreboardKillsP2(int kills)
     {
-        killsP2.GetComponent<TMP_Text>().text = kills.ToString();
+        killsP2Score.GetComponent<TMP_Text>().text = kills.ToString();
+    }
+    private void SetNicknamesScoreboard()
+    {
+        nicknameP1Score.GetComponent<TMP_Text>().text = PlayerPrefs.GetString("nickname1");
+        nicknameP2Score.GetComponent<TMP_Text>().text = PlayerPrefs.GetString("nickname2");
     }
 }
