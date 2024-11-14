@@ -1866,11 +1866,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   velocity: 5
-  maxHealth: 3
   gunType: 1
   hitmarker: {fileID: 4444667913538871512}
   nicknameBox: {fileID: 4393720234339991636}
   otherPlayer: {fileID: 0}
+  maxHealth: 3
 --- !u!1001 &5668213454065030028
 PrefabInstance:
   m_ObjectHideFlags: 0
