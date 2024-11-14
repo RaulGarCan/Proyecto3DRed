@@ -9,20 +9,20 @@ using UnityEngine.Windows;
 public class PlayerMovement : MonoBehaviour
 {
     public float velocity;
+    public GunType gunType;
+    public GameObject hitmarker, nicknameBox, otherPlayer;
+    public int maxHealth;
+
     private Animator anim;
     private Rigidbody rig;
     private Transform shootPoint;
     private bool canShoot;
     private LineRenderer line;
-    public int maxHealth;
-    private int health;
     private Vector3 spawnPos;
     private Quaternion spawnRot;
-    private int playerHitCounter;
-    public GunType gunType;
-    private int kills;
+    private int playerHitCounter, kills, health;
     private GameObject scoreboard, crosshair, killsP1Score, killsP2Score, nicknameP1Score, nicknameP2Score;
-    public GameObject hitmarker, nicknameBox, otherPlayer;
+    private float deathDelay;
     private Camera camFirstPerson, camThirdPerson;
     public enum GunType {
         RIFLE,
@@ -48,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
         killsP2Score = scoreboard.transform.GetChild(4).gameObject;
         nicknameP1Score = scoreboard.transform.GetChild(1).gameObject;
         nicknameP2Score = scoreboard.transform.GetChild(3).gameObject;
+        deathDelay = Time.time;
 
         if (!GetComponent<PhotonView>().IsMine)
         {
@@ -127,7 +128,7 @@ public class PlayerMovement : MonoBehaviour
                         UpdateScoreboardKillsP2(kills);
                     }
                     playerHitCounter = 0;
-                    RespawnPlayer();
+                    Invoke("RespawnPlayer",4f);
                 }
             }
         }
@@ -158,7 +159,7 @@ public class PlayerMovement : MonoBehaviour
             anim.SetTrigger("Dead");
             GetComponent<Collider>().enabled = false;
             this.enabled = false;
-            RespawnPlayer();
+            Invoke("RespawnPlayer", 4f);
         }
     }
     private void RespawnPlayer()
